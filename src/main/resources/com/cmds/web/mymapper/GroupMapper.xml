@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cmds.web.mymapper.GroupMapper">
+
+   <select id="selectGroup" resultType="com.cmds.web.model.CmdsGroup">
+        SELECT
+          groupID AS groupID,
+          groupName AS groupName
+        FROM
+          `group`
+         ORDER BY FIELD(groupName, '없음') DESC, groupName ASC
+    </select>
+    
+     <select id="selectGroupInfo" parameterType="Integer" resultType="com.cmds.web.model.CmdsGroupInfo">
+        SELECT
+          groupInfoID AS groupInfoID,
+          groupID AS groupID,
+          FARM_KEY AS FARM_KEY,
+          CMS_KEY AS CMS_KEY
+        FROM
+          `groupInfo`
+        WHERE
+          groupID = #{groupID}
+         ORDER BY FARM_KEY ASC, CMS_KEY ASC
+    </select>
+    
+      <select id="selectGroupInfoCheck" parameterType="com.cmds.web.model.CmdsGroupInfo" resultType="com.cmds.web.model.CmdsGroupInfo">
+        SELECT
+          groupInfoID AS groupInfoID,
+          groupID AS groupID,
+          FARM_KEY AS FARM_KEY,
+          CMS_KEY AS CMS_KEY
+        FROM
+          `groupInfo`
+        WHERE
+          groupID = #{groupID} AND FARM_KEY = #{FARM_KEY} AND CMS_KEY = #{CMS_KEY}
+    </select>
+    
+     
+    <insert id="insertGroup" parameterType="String">
+        INSERT INTO `group` (
+          groupName
+        ) VALUES (
+          #{groupName}
+        )
+    </insert>
+    
+    <insert id="insertGroupInfo" parameterType="com.cmds.web.model.CmdsGroupInfo" useGeneratedKeys="true" keyProperty="groupInfoID">
+        INSERT INTO `groupInfo` (
+          groupID,
+          FARM_KEY,
+          CMS_KEY
+        ) VALUES (
+          #{groupID},
+          #{FARM_KEY},
+          #{CMS_KEY}
+        )
+    </insert>
+    
+   	<delete id="deleteGroup" parameterType="Integer">
+       DELETE FROM
+      	 `group`
+       WHERE
+         groupID = #{groupID} 
+    </delete>
+    
+    <delete id="deleteGroupInfo" parameterType="Integer">
+       DELETE FROM
+      	 `groupInfo`
+       WHERE
+         groupInfoID = #{groupInfoID} 
+    </delete>
+    
+</mapper>

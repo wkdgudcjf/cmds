@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cmds.web.msmapper.CmsMapper">
+
+    <select id="selectFarmKeyList" resultType="int">
+        SELECT DISTINCT
+        FARM_KEY as farmKey
+        FROM FARM
+        ORDER BY FARM_KEY ASC
+    </select>
+
+    <select id="selectCmsKeyList" resultType="int">
+        SELECT DISTINCT
+        CMS_KEY as cmsKey
+        FROM WINDTURBINE
+        WHERE FARM_KEY = #{farmKey}
+        ORDER BY CMS_KEY ASC
+    </select>
+
+    <select id="selectTurbineIoDevice" parameterType="map" resultType="int">
+        SELECT
+            IODevice
+        FROM WINDTURBINE
+        WHERE
+            FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey}
+    </select>
+
+    <select id="selectTurbineIoDeviceList" parameterType="com.cmds.web.model.Turbine" resultType="com.cmds.web.model.IoDevice">
+        SELECT
+            IODevice as ioDevice,
+            CMS_KEY as cmsKey,
+            FARM_KEY as farmKey
+        FROM WINDTURBINE
+        <where>
+            <foreach collection="list" item="item">
+                OR (FARM_KEY = #{item.farmKey} AND CMS_KEY = #{item.cmsKey})
+            </foreach>
+        </where>
+    </select>
+
+    <select id="selectDriveTrainVibrationList" parameterType="map" resultType="com.cmds.web.model.DriveTrainVibration">
+        SELECT TOP 30
+            DT as dt,
+            FARM_KEY as farmKey,
+            CMS_KEY as cmsKey,
+            ALARM_LEVEL as alarmLevel,
+            BIN_NO as binNo,
+            ALARM_DESC as alarmDesc
+        FROM ALARM
+        WHERE
+            FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey}
+            AND DT_OFF IS NULL
+        ORDER BY dt DESC
+    </select>
+
+    <select id="selectChannelList" parameterType="int" resultType="com.cmds.web.model.Channel">
+        <![CDATA[
+        SELECT DISTINCT
+          channel.FARM_KEY AS farmKey,
+          channel.CMS_KEY AS cmsKey,
+          channel.CH_NO AS chNo,
+          channel.CH_TYPE AS chType,
+          channel.CH_NAME AS chName
+        FROM CHANNEL channel
+          INNER JOIN UNIT unit ON (
+            channel.FARM_KEY = unit.FARM_KEY
+            AND channel.CMS_KEY = unit.CMS_KEY
+            AND channel.CH_NO = unit.CH_NO
+            AND channel.CH_TYPE = unit.ch_type
+          )
+        WHERE
+          unit.FARM_KEY = #{farmKey} AND unit.CMS_KEY = #{cmsKey}
+        AND unit.UNIT_NAME <> '' AND channel.CH_NAME <> ''
+        ORDER BY channel.CH_NO ASC, channel.CH_TYPE ASC
+        ]]>
+    </select>
+
+    <select id="selectUnitList" parameterType="int" resultType="com.cmds.web.model.Unit">
+        <![CDATA[
+        SELECT
+          UNIT_NO AS unitNo,
+          FARM_KEY AS farmKey,
+          CMS_KEY AS cmsKey,
+          CH_NO AS chNo,
+          ch_type AS chType,
+          UNIT_NAME AS unitName
+        FROM UNIT
+        WHERE
+          FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey} AND CH_NO = #{chNo} AND ch_type = #{chType}
+        AND UNIT_NAME <> ''
+        ORDER BY UNIT_NO ASC
+        ]]>
+    </select>
+
+    <select id="selectStageBinList" parameterType="map" resultType="com.cmds.web.model.StageBin">
+        SELECT
+            DT AS dt,
+            FARM_KEY AS farmKey,
+            CMS_KEY AS cmsKey,
+            CH_NO AS chNo,
+            CH_TYPE AS chType,
+            UNIT_AVG AS unitAvg
+        FROM STAGE1BIN${number}
+        WHERE
+          FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey}
+          AND CH_NO = #{chNo} AND CH_TYPE = #{chType}
+          AND UNIT_NO = #{unitNo}
+          AND (dt BETWEEN #{startDate} AND #{endDate})
+          ORDER BY DT ASC
+    </select>
+</mapper>

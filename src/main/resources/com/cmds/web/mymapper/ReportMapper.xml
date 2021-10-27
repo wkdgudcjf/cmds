@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cmds.web.mymapper.ReportMapper">
+
+    <select id="selectReport" resultType="com.cmds.web.model.Report" parameterType="com.cmds.web.model.CmdsGroupInfo">
+        SELECT
+          ID AS id,
+          userID AS userID,
+          PART AS part,
+          ASSESSMENT AS assessment,
+          RECOMMEND AS recommend,
+          IMAGETARGET AS imageTarget,
+          REGISTER_DATE AS registerDate,
+          FARM_KEY AS farmKey,
+          CMS_KEY AS cmsKey
+        FROM
+          report
+        <where>
+            <foreach collection="list" item="item">
+                OR (FARM_KEY = #{item.FARM_KEY} AND CMS_KEY = #{item.CMS_KEY})
+            </foreach>
+        </where>
+        ORDER BY REGISTER_DATE DESC
+        LIMIT 50
+    </select>
+    
+     <select id="selectReportLast" resultType="com.cmds.web.model.Report" parameterType="map">
+        SELECT
+          ID AS id,
+          userID AS userID,
+          PART AS part,
+          ASSESSMENT AS assessment,
+          RECOMMEND AS recommend,
+          IMAGETARGET AS imageTarget,
+          REGISTER_DATE AS registerDate,
+          FARM_KEY AS farmKey,
+          CMS_KEY AS cmsKey
+        FROM
+           report
+        <where>
+            <foreach collection="groupInfoList" item="item">
+                OR (FARM_KEY = #{item.FARM_KEY} AND CMS_KEY = #{item.CMS_KEY} AND ID <![CDATA[ < ]]> #{lastID})
+            </foreach>
+        </where>
+        ORDER BY REGISTER_DATE DESC
+        LIMIT 50
+    </select>
+    
+
+ 	<select id="selectReportTarget" parameterType="map" resultType="com.cmds.web.model.Report">
+        SELECT
+          ID AS id,
+          userID AS userID,
+          PART AS part,
+          ASSESSMENT AS assessment,
+          RECOMMEND AS recommend,
+          IMAGETARGET AS imageTarget,
+          REGISTER_DATE AS registerDate,
+          FARM_KEY AS farmKey,
+          CMS_KEY AS cmsKey
+        FROM
+          report
+        WHERE
+          FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey}
+        ORDER BY REGISTER_DATE DESC
+        LIMIT 30
+    </select>
+    
+    <insert id="insertReport" parameterType="com.cmds.web.model.Report">
+        INSERT INTO report (
+          userID,
+          PART,
+          ASSESSMENT,
+          RECOMMEND,
+          IMAGETARGET,
+          REGISTER_DATE,
+          FARM_KEY,
+          CMS_KEY
+        ) VALUES (
+          #{userID},
+          #{part},
+          #{assessment},
+          #{recommend},
+          #{imageTarget},
+          NOW(),
+          #{farmKey},
+          #{cmsKey}
+        )
+    </insert>
+</mapper>

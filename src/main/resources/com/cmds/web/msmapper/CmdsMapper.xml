@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cmds.web.msmapper.CmdsMapper">
+
+    <select id="selectTurbineList" resultType="com.cmds.web.model.Turbine" parameterType="com.cmds.web.model.CmdsGroupInfo">
+        SELECT
+          t1.DT as dt,
+          t1.FARM_KEY as farmKey,
+          t1.CMS_KEY as cmsKey,
+          SUBSTRING(CAST(ROUND(t1.WindSpeed, 2) AS VARCHAR), 0, 5) as windSpeed,
+          ROUND(t1.ActivePower, 2) as activePower,
+          ROUND(t1.WindDirection, 2) as windDirection,
+          t1.PitchAngle as pitchAngle,
+          t1.Status as status
+        FROM TB_Trend t1
+        JOIN (
+            SELECT
+              FARM_KEY,
+              CMS_KEY,
+              MAX(DT) as MAX_DT
+            FROM TB_Trend
+            GROUP BY FARM_KEY, CMS_KEY
+        ) AS t2 ON (t1.FARM_KEY = t2.FARM_KEY AND t1.CMS_KEY = t2.CMS_KEY AND t1.DT = t2.MAX_DT)
+        <where>
+            <foreach collection="list" item="item">
+                OR (t1.FARM_KEY = #{item.FARM_KEY} AND t1.CMS_KEY = #{item.CMS_KEY})
+            </foreach>
+        </where>
+        ORDER BY t1.FARM_KEY ASC, t1.CMS_KEY ASC;
+    </select>
+
+    <select id="selectTurbine" parameterType="map" resultType="com.cmds.web.model.Turbine">
+        SELECT
+            DT as dt,
+            FARM_KEY as farmKey,
+            CMS_KEY as cmsKey,
+            SUBSTRING(CAST(ROUND(WindSpeed, 2) AS VARCHAR), 0, 5) as windSpeed,
+            ROUND(ActivePower, 2) as activePower,
+            ROUND(WindDirection, 2) as windDirection,
+            PitchAngle as pitchAngle,
+            ROUND(RotorSpeed, 2) as rotorSpeed,
+            Status as status
+        FROM TB_Trend
+        WHERE
+          FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey}
+          AND dt = (SELECT MAX(dt) FROM TB_Trend WHERE FARM_KEY = #{farmKey} AND CMS_KEY = #{cmsKey})
+    </select>
+</mapper>

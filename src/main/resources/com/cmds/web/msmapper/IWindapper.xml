@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cmds.web.msmapper.IWindMapper">
+
+    <select id="selectUnitName" parameterType="int" resultType="string">
+        SELECT
+            UNIT_NAME as unitName
+        FROM TB_UNIT
+        WHERE
+            IODEVICE = #{ioDevice}
+    </select>
+
+    <select id="selectUnitNameList" parameterType="com.cmds.web.model.IoDevice" resultType="com.cmds.web.model.UnitName">
+        SELECT
+          IODEVICE as ioDevice,
+          UNIT_NAME as unitName
+        FROM TB_UNIT
+        <where>
+            <choose>
+                <when test="list.size != 0">
+                    IODEVICE IN
+                    <foreach collection="list" item="item" open="(" close=")" separator=",">
+                        #{item.ioDevice}
+                    </foreach>
+                </when>
+                <otherwise>
+                    1 = 2
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <select id="selectWindTurbineGeneratorList" parameterType="int" resultType="com.cmds.web.model.WindTurbineGenerator">
+        SELECT TOP 30
+            alarm.DT AS dt,
+            alarm.IODEVICE AS ioDevice,
+            alarm.ALARMLEVEL AS alarmLevel,
+            alarm_message.ALARM_DESC AS alarmDesc
+        FROM TB_ALARM alarm
+        JOIN TB_ALARMMESSAGE alarm_message ON (alarm.ALARM_CODE = alarm_message.CODE AND alarm.ALARMLEVEL = alarm_message.ALARM_LEVEL)
+        WHERE
+            alarm.IODEVICE = #{ioDevice}
+            AND alarm.DT_OFF IS NULL
+        ORDER BY dt DESC
+    </select>
+
+    <select id="selectTurbine10MScada" parameterType="map" resultType="com.cmds.web.model.TurbineScada">
+        SELECT
+            dt AS dt,
+            WNAC_WdSpd AS windSpeed,
+            WNAC_WdDir AS windDirection,
+            WTUR_W AS windPower
+        FROM TB_10M_SCADA
+        WHERE
+            IODEVICE = #{ioDevice}
+            AND (dt BETWEEN #{startDate} AND #{endDate})
+    </select>
+
+    <select id="selectTurbinePowerCurveConfigList" parameterType="int" resultType="com.cmds.web.model.TurbinePowerCurveConfig">
+        SELECT
+            IODEVICE AS ioDevice,
+            LEVEL AS level,
+            DATA AS data
+        FROM TB_POWERCURVE_CONFIG
+        WHERE
+            IODEVICE = #{ioDevice}
+    </select>
+
+    <select id="selectTurbineStatsList" parameterType="map" resultType="com.cmds.web.model.TurbineStats">
+        SELECT
+            DT AS dt,
+            IODEVICE AS ioDevice,
+            WTUR_TotWh_Diff AS totalWhDiff,
+            WTUR_W AS w,
+            Availability AS availability
+        <if test="dateType.name() == 'DAY'">
+            FROM TB_STATS_DAY
+        </if>
+        <if test="dateType.name() == 'HOUR'">
+            FROM TB_STATS_HOUR
+        </if>
+        <if test="dateType.name() == 'MONTH'">
+            FROM TB_STATS_MONTH
+        </if>
+        <![CDATA[
+        WHERE
+          IODEVICE = #{ioDevice}
+          AND (dt BETWEEN #{startDate} AND #{endDate})
+        ORDER BY DT
+        ]]>
+    </select>
+</mapper>
